@@ -16,16 +16,16 @@ t_fine = 0.0
 
 
 def writeReg(reg_address, data):
-    bus.write_byte_data(i2c_address,reg_address,data)
+    bus.write_byte_data(i2c_address, reg_address, data)
 
 def get_calib_param():
     calib = []
 
-    for i in range (0x88,0x88+24):
-        calib.append(bus.read_byte_data(i2c_address,i))
-    calib.append(bus.read_byte_data(i2c_address,0xA1))
-    for i in range (0xE1,0xE1+7):
-        calib.append(bus.read_byte_data(i2c_address,i))
+    for i in range (0x88, 0x88+24):
+        calib.append(bus.read_byte_data(i2c_address, i))
+    calib.append(bus.read_byte_data(i2c_address, 0xA1))
+    for i in range (0xE1, 0xE1+7):
+        calib.append(bus.read_byte_data(i2c_address, i))
 
     digT.append((calib[1] << 8) | calib[0])
     digT.append((calib[3] << 8) | calib[2])
@@ -46,22 +46,22 @@ def get_calib_param():
     digH.append((calib[30]<< 4) | ((calib[29] >> 4) & 0x0F))
     digH.append( calib[31] )
 
-    for i in range(1,2):
+    for i in range(1, 2):
         if digT[i] & 0x8000:
             digT[i] = (-digT[i] ^ 0xFFFF) + 1
 
-    for i in range(1,8):
+    for i in range(1, 8):
         if digP[i] & 0x8000:
             digP[i] = (-digP[i] ^ 0xFFFF) + 1
 
-    for i in range(0,6):
+    for i in range(0, 6):
         if digH[i] & 0x8000:
             digH[i] = (-digH[i] ^ 0xFFFF) + 1
 
 def readData():
     data = []
     for i in range (0xF7, 0xF7+8):
-        data.append(bus.read_byte_data(i2c_address,i))
+        data.append(bus.read_byte_data(i2c_address, i))
     pres_raw = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
     temp_raw = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4)
     hum_raw  = (data[6] << 8)  |  data[7]
@@ -92,7 +92,7 @@ def compensate_P(adc_P):
     v1 = (digP[8] * (((pressure / 8.0) * (pressure / 8.0)) / 8192.0)) / 4096
     v2 = ((pressure / 4.0) * digP[7]) / 8192.0
     pressure = pressure + ((v1 + v2 + digP[6]) / 16.0)
-    return str(round(pressure/100, 2))
+    return str(round(pressure / 100, 2))
 
 def compensate_T(adc_T):
     global t_fine
@@ -100,13 +100,13 @@ def compensate_T(adc_T):
     v2 = (adc_T / 131072.0 - digT[0] / 8192.0) * (adc_T / 131072.0 - digT[0] / 8192.0) * digT[2]
     t_fine = v1 + v2
     temperature = t_fine / 5120.0
-    return str(round(temperature ,2))
+    return str(round(temperature, 2))
 
 def compensate_H(adc_H):
     global t_fine
     var_h = t_fine - 76800.0
     if var_h != 0:
-        var_h = (adc_H - (digH[3] * 64.0 + digH[4]/16384.0 * var_h)) * (digH[1] / 65536.0 * (1.0 + digH[5] / 67108864.0 * var_h * (1.0 + digH[2] / 67108864.0 * var_h)))
+        var_h = (adc_H - (digH[3] * 64.0 + digH[4] / 16384.0 * var_h)) * (digH[1] / 65536.0 * (1.0 + digH[5] / 67108864.0 * var_h * (1.0 + digH[2] / 67108864.0 * var_h)))
     else:
         return 0
     var_h = var_h * (1.0 - digH[0] * var_h / 524288.0)
@@ -130,9 +130,9 @@ def setup():
     config_reg    = (t_sb << 5) | (filter << 2) | spi3w_en
     ctrl_hum_reg  = osrs_h
 
-    writeReg(0xF2,ctrl_hum_reg)
-    writeReg(0xF4,ctrl_meas_reg)
-    writeReg(0xF5,config_reg)
+    writeReg(0xF2, ctrl_hum_reg)
+    writeReg(0xF4, ctrl_meas_reg)
+    writeReg(0xF5, config_reg)
 
 
 setup()
